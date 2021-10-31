@@ -8,6 +8,7 @@ on:
       - '**/README.md'
 env:
   GCP_PROJECT: go-boiler
+  GCP_PROJECT_NUML: 1016340168594
   CI_SA_EMAIL: ci-user@${GCP_PROJECT}.iam.gserviceaccount.com
 #  REPO_NAME: renderer
 #  RUN_REGION: europe-west1
@@ -30,7 +31,7 @@ jobs:
         uses: 'google-github-actions/auth@v0.3.1'
         with:
           create_credentials_file: true
-          workload_identity_provider: 'projects/${{ env.GCP_PROJECT }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
+          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
           service_account: 'ci-user@${ env.GCP_PROJECT }.iam.gserviceaccount.com'
 
       - name: Check out code into the Go module directory
