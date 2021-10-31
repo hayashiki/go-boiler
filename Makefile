@@ -6,8 +6,13 @@ GOBIN ?= $(shell go env GOPATH)/bin
 export GO111MODULE=on
 
 ### GCP
-
-
+GCP_PROJECT := $(shell gcloud config get-value project)
+GCP_PROJECT_NUMBER=$(shell gcloud projects describe ${GCP_PROJECT} --format="get(projectNumber)")
+POOL_NAME := "github-actions"
+WORKLOAD_IDENTITY_POOL_ID=$(shell gcloud iam workload-identity-pools describe "${POOL_NAME}" --project="${GCP_PROJECT}" --location="global" --format="value(name)")
+GITHUB_REPO:=hayashiki/go-boiler
+PROVIDER_NAME=gha-provider
+CI_SA_EMAIL := "ci-user@${GCP_PROJECT}.iam.gserviceaccount.com"
 
 ### deploy / build ###
 
@@ -65,3 +70,53 @@ upload: $(GOBIN)/ghr
 
 $(GOBIN)/ghr:
 	cd && go get github.com/tcnksm/ghr
+
+
+########################
+### CI Service SA    ###
+########################
+
+create-ci-sa:
+	gcloud iam service-accounts create "ci-user" \
+		--project=${GCP_PROJECT} \
+		--display-name "CI User Service Account"
+
+grant-role-ci:
+	gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
+		--member serviceAccount:ci-user@${GCP_PROJECT}.iam.gserviceaccount.com \
+		--role roles/owner
+
+#   個別に与える方法もあるので確認を
+#   https://www.devsamurai.com/ja/gcp-terraform-service-account-permission/
+#		--role roles/iam.serviceAccountUser
+
+########################
+### WorkloadIdentify ###
+########################
+
+enable:
+	gcloud services enable iamcredentials.googleapis.com --project ${GCP_PROJECT}
+
+create_pool:
+	gcloud iam workload-identity-pools create ${POOL_NAME} \
+		--project=${GCP_PROJECT} --location="global" \
+		--display-name="use from GitHub Actions"
+
+show_pool_id:
+	$(WORKLOAD_IDENTITY_POOL_ID)
+	# gcloud iam workload-identity-pools describe "github-actions" --project ${GCP_PROJECT} --location="global" --format="value(name)"
+
+create-policy:
+	gcloud iam service-accounts add-iam-policy-binding ${CI_SA_EMAIL} \
+	--project="${GCP_PROJECT}" \
+	--role="roles/iam.workloadIdentityUser" \
+	--member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${GITHUB_REPO}"
+
+# # PoolにProviderを作成する
+create-provider:
+	gcloud iam workload-identity-pools providers create-oidc "${PROVIDER_NAME}" \
+	--project="${GCP_PROJECT}" --location="global" \
+	--workload-identity-pool="${POOL_NAME}" \
+	--display-name="use from GitHub Actions provider" \
+	--attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.actor=assertion.actor,attribute.aud=assertion.aud" \
+	--issuer-uri="https://token.actions.githubusercontent.com"

@@ -1,0 +1,66 @@
+name: oice federation
+
+on:
+  push:
+    branches:
+      - infra
+    paths-ignore:
+      - '**/README.md'
+env:
+  GCP_PROJECT: go-boiler
+  CI_SA_EMAIL: ci-user@${GCP_PROJECT}.iam.gserviceaccount.com
+#  REPO_NAME: renderer
+#  RUN_REGION: europe-west1
+  BUCKET_NAME: go-boiler-tf-state
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: 'write'
+
+    steps:
+      - uses: 'google-github-actions/setup-gcloud@master'
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0.3.1'
+        with:
+          create_credentials_file: true
+          workload_identity_provider: 'projects/${{ env.GCP_PROJECT }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
+          service_account: 'ci-user@${ env.GCP_PROJECT }.iam.gserviceaccount.com'
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - id: 'gcloud'
+        name: 'gcloud'
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+          gcloud app deploy -q
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Create tf state bucket
+        run: |-
+          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.PROJECT_ID }} -l ${{ env.RUN_REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
+
+      - name: Terraform init
+        id: init
+        run: |-
+          mv tf-scripts/gcp/service/cloudrun/backend.tf .
+          terraform init  -backend-config="bucket=$BUCKET_NAME" -backend-config="prefix=dev"
+        continue-on-error: false
+        working-directory: ./tf-scripts
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+      - name: Terraform Plan
+        id: plan
+        run: |-
+          terraform plan \
+           -var="project_id=$PROJECT_ID" \
+           -var="region=$RUN_REGION"

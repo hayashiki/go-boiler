@@ -1,4 +1,8 @@
-on: [push, pull_request]
+#on: [push, pull_request]
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/test_2.yml"
 name: Test
 jobs:
   test:

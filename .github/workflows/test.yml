@@ -1,7 +1,10 @@
 name: Go
-on: [push, pull_request]
+#on: [push, pull_request
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/test.yml"
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
