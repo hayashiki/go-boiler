@@ -8,7 +8,7 @@ on:
       - '**/README.md'
 env:
   GCP_PROJECT: go-boiler
-  GCP_PROJECT_NUML: 1016340168594
+  GCP_PROJECT_NUM: 1016340168594
   CI_SA_EMAIL: ci-user@${GCP_PROJECT}.iam.gserviceaccount.com
 #  REPO_NAME: renderer
 #  RUN_REGION: europe-west1
