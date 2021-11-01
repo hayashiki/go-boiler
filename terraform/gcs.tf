@@ -1,6 +1,6 @@
-resource "google_storage_bucket" "tf_state" {
+resource "google_storage_bucket" "tf_example" {
   project  = var.project
-  name     = "eitan-${var.env}-tf-state"
+  name     = "go-boiler-${var.env}-tf-state"
   location = "asia"
 
   versioning {

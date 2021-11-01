@@ -24,7 +24,6 @@ jobs:
       - uses: 'google-github-actions/setup-gcloud@master'
         with:
           project_id: ${{ env.GCP_PROJECT }}
-          export_default_credentials: true
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
@@ -46,9 +45,9 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Create tf state bucket
-        run: |-
-          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
+#      - name: Create tf state bucket
+#        run: |-
+#          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
 
       - name: Terraform init
         id: init
