@@ -1,0 +1,59 @@
+name: Cloud Run Deploy
+on:
+  push:
+    paths:
+      - ".github/workflows/deploy_run.yml"
+    branch:
+      - run
+env:
+  GCP_PROJECT: go-boiler
+  GCP_PROJECT_NUM: 1016340168594
+  SERVICE_NAME: go-boiler-api
+  REGION: asia-northeast1
+  BUCKET_NAME: go-boiler-tf-state
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+#    needs: test
+
+    permissions:
+      contents: read
+      id-token: 'write'
+
+    steps:
+      - uses: 'google-github-actions/setup-gcloud@master'
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0.3.1'
+        with:
+          create_credentials_file: true
+          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
+          service_account: 'ci-user@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com'
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - id: 'gcloud'
+        name: 'gcloud'
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+          gcloud --quiet auth configure-docker
+
+      - name: Push Docker Image to Prod GCR
+#        if: contains(github.ref, 'tags/v')
+        run: |
+          docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
+          docker tag ${{ env.SERVICE_NAME }} asia.gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:$GITHUB_SHA
+          docker push asia.gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:$GITHUB_SHA
+
+      - name: Deploy
+        run: |-
+          gcloud run deploy renderer --image gcr.io/$CLOUD_RUN_PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
+            --project $SERVICE_NAME \
+            --platform managed \
+            --region $REGION \
+            --service-acount go-boiler-api@$GCP_PROJECT.iam.gserviceaccount.com \
+            --no-allow-unauthenticated
