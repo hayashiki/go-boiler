@@ -1,8 +1,8 @@
 name: Cloud Run Deploy
 on:
   push:
-    paths:
-      - ".github/workflows/deploy_run.yml"
+#    paths:
+#      - ".github/workflows/deploy_run.yml"
     branch:
       - run
 env:
