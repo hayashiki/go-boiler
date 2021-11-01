@@ -60,9 +60,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |-
-          terraform plan \
-           -var="project_id=$PROJECT_ID" \
-           -var="region=$RUN_REGION"
+          terraform plan
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
