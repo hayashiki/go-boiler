@@ -11,6 +11,7 @@ enable:
 	gcloud services enable run.googleapis.com
 	gcloud services enable iam.googleapis.com
 	gcloud services enable compute.googleapis.com
+	gcloud services enable containerregistry.googleapis.com # gcr push
 	gcloud services enable cloudbuild.googleapis.com
 	gcloud services enable cloudkms.googleapis.com
 	gcloud services enable cloudresourcemanager.googleapis.com

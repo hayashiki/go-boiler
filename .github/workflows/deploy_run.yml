@@ -51,9 +51,9 @@ jobs:
 
       - name: Deploy
         run: |-
-          gcloud run deploy renderer --image gcr.io/$CLOUD_RUN_PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
+          gcloud run deploy renderer --image gcr.io/GCP_PROJECT/$SERVICE_NAME:$GITHUB_SHA \
             --project $SERVICE_NAME \
             --platform managed \
             --region $REGION \
-            --service-acount go-boiler-api@$GCP_PROJECT.iam.gserviceaccount.com \
+            --service-account go-boiler-api@$GCP_PROJECT.iam.gserviceaccount.com \
             --no-allow-unauthenticated
