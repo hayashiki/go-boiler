@@ -10,7 +10,7 @@ env:
   GCP_PROJECT: go-boiler
   GCP_PROJECT_NUM: 1016340168594
 #  REPO_NAME: renderer
-#  RUN_REGION: europe-west1
+  REGION: europe-west1
   BUCKET_NAME: go-boiler-tf-state
 jobs:
   deploy:
@@ -47,15 +47,14 @@ jobs:
 
       - name: Create tf state bucket
         run: |-
-          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.PROJECT_ID }} -l ${{ env.RUN_REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
+          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT_NUM }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
 
       - name: Terraform init
         id: init
         run: |-
-          mv tf-scripts/gcp/service/cloudrun/backend.tf .
-          terraform init  -backend-config="bucket=$BUCKET_NAME" -backend-config="prefix=dev"
+          terraform init
         continue-on-error: false
-        working-directory: ./tf-scripts
+        working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
       - name: Terraform Plan
@@ -64,3 +63,6 @@ jobs:
           terraform plan \
            -var="project_id=$PROJECT_ID" \
            -var="region=$RUN_REGION"
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
