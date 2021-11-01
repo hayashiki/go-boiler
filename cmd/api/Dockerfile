@@ -9,9 +9,6 @@ RUN apk add --no-cache upx && \
 COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags '-w -s' -o /go/bin/api cmd/api/main.go && \
     upx /go/bin/api
-FROM scratch
-COPY --from=go-builder /go/bin/api /go/bin/api
-ENTRYPOINT ["/go/bin/longcat"]
 
 FROM gcr.io/distroless/base:latest
 
