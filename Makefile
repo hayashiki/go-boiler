@@ -73,6 +73,12 @@ $(GOBIN)/ghr:
 
 
 ########################
+### Terraform GCS    ###
+########################
+create-tf-state:
+	gsutil mb -p go-boiler -l asia-northeast1 -b on gs://go-boiler-tf-state
+
+########################
 ### CI Service SA    ###
 ########################
 

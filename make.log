@@ -66,3 +66,8 @@ gcloud iam workload-identity-pools providers create-oidc "gha-provider" \
         --issuer-uri="https://token.actions.githubusercontent.com"
 Created workload identity pool provider [gha-provider].
 ```
+
+```
+ % gsutil mb -p go-boiler -l asia-northeast1 -b on gs://go-boiler-tf-state
+Creating gs://go-boiler-tf-state/...
+```

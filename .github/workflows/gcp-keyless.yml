@@ -66,3 +66,11 @@ jobs:
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Terraform Plan
+        id: plan
+        run: |-
+          terraform apply
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
