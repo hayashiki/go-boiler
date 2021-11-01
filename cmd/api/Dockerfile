@@ -7,7 +7,7 @@ RUN apk add --no-cache upx && \
     go version && \
     go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -ldflags '-w -s' -o /go/bin/api && \
+RUN CGO_ENABLED=0 go build -trimpath -ldflags '-w -s' -o /go/bin/api cmd/api/main.go && \
     upx /go/bin/api
 FROM scratch
 COPY --from=go-builder /go/bin/api /go/bin/api
