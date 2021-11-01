@@ -61,6 +61,8 @@ jobs:
         id: plan
         run: |-
           terraform plan
+#            \-var="project=${{ env.GCP_PROJECT }}" \
+#           -var="env=prod" \
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
