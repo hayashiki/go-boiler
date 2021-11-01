@@ -60,17 +60,18 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |-
-          terraform plan
+          terraform plan -no-color
 #            \-var="project=${{ env.GCP_PROJECT }}" \
 #           -var="env=prod" \
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
-      - name: Terraform Plan
+      - name: Terraform Apply
         id: plan
         run: |-
           terraform apply
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+# TODO: https://zenn.dev/rinchsan/articles/de981e561eb36ebfab70 fmtをいれる
