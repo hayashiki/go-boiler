@@ -68,7 +68,7 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
       - name: Terraform Apply
-        id: plan
+        id: apply
         run: |-
           terraform apply
         working-directory: ./terraform
