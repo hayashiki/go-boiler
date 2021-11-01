@@ -40,7 +40,7 @@ jobs:
         name: 'gcloud'
         run: |-
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
-          gcloud app deploy -q
+          gcloud config list
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
