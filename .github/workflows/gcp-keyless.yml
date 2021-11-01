@@ -60,8 +60,9 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |-
-          terraform plan -no-color
-#            \-var="project=${{ env.GCP_PROJECT }}" \
+          terraform plan -no-color \
+          -out=PLAN
+        #            \-var="project=${{ env.GCP_PROJECT }}" \
 #           -var="env=prod" \
         working-directory: ./terraform
         env:
@@ -70,7 +71,7 @@ jobs:
       - name: Terraform Apply
         id: apply
         run: |-
-          terraform apply
+          terraform apply PLAN
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
