@@ -24,6 +24,7 @@ jobs:
       - uses: 'google-github-actions/setup-gcloud@master'
         with:
           project_id: ${{ env.GCP_PROJECT }}
+          export_default_credentials: true
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
