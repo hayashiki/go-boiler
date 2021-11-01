@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  app:
+    env_file: .env
+    build:
+      context: "."
+      dockerfile: cmd/api/dev.Dockerfile
+#    command: "cd cmd/api && air -c .air.toml"
+    tty: true
+    volumes:
+      - .:/app
+    #      - ./credentials:/credentials/google-app-credentials
+    ports:
+      - "8080:8080"

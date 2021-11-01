@@ -46,12 +46,12 @@ jobs:
 #        if: contains(github.ref, 'tags/v')
         run: |
           docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
-          docker tag ${{ env.SERVICE_NAME }} asia.gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:$GITHUB_SHA
-          docker push asia.gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${GITHUB_SHA}
+          docker tag ${{ env.SERVICE_NAME }} asia.gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker push asia.gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
       - name: Deploy
         run: |-
-          gcloud run deploy ${{ env.SERVICE_NAME }} --image gcr.io/${{ env.GCP_PROJECT }}/${SERVICE_NAME}:${GITHUB_SHA} \
+          gcloud run deploy ${{ env.SERVICE_NAME }} --image gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --project ${{ env.GCP_PROJECT }} \
             --platform managed \
             --region ${{ env.REGION }} \

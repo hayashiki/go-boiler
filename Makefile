@@ -13,6 +13,7 @@ WORKLOAD_IDENTITY_POOL_ID=$(shell gcloud iam workload-identity-pools describe "$
 GITHUB_REPO:=hayashiki/go-boiler
 PROVIDER_NAME=gha-provider
 CI_SA_EMAIL := "ci-user@${GCP_PROJECT}.iam.gserviceaccount.com"
+CLOUDBUILD_SA=${GCP_PROJECT_NUMBER}@cloudbuild.gserviceaccount.com
 
 ### deploy / build ###
 
@@ -91,6 +92,16 @@ grant-role-ci:
 	gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
 		--member serviceAccount:ci-user@${GCP_PROJECT}.iam.gserviceaccount.com \
 		--role roles/owner
+
+grant-role-sa:
+	gcloud iam service-accounts add-iam-policy-binding ${CI_SA_EMAIL} \
+	  --member "serviceAccount:${CLOUDBUILD_SA}" \
+	  --role "roles/iam.serviceAccountUser"
+
+#	gcloud iam service-accounts add-iam-policy-binding ${CI_SA_EMAIL} \
+#		--member "serviceAccount:${CI_SA_EMAIL}" \
+#		--role "roles/iam.serviceAccountUser"
+#
 
 #   個別に与える方法もあるので確認を
 #   https://www.devsamurai.com/ja/gcp-terraform-service-account-permission/
