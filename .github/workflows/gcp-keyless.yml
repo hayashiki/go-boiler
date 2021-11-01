@@ -10,7 +10,7 @@ env:
   GCP_PROJECT: go-boiler
   GCP_PROJECT_NUM: 1016340168594
 #  REPO_NAME: renderer
-  REGION: europe-west1
+  REGION: asia-northeast1
   BUCKET_NAME: go-boiler-tf-state
 jobs:
   deploy:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Create tf state bucket
         run: |-
-          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT_NUM }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
+          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
 
       - name: Terraform init
         id: init
