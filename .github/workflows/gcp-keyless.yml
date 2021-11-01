@@ -47,7 +47,7 @@ jobs:
 
       - name: Create tf state bucket
         run: |-
-          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+          gcloud auth activate-service-account --key-file="${{ steps.auth.outputs.credentials_file_path }}"
           if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
 
       - name: Terraform init
