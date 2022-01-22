@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/hayashiki/go-boiler"
+	goboiler "github.com/hayashiki/go-boiler"
 )
 
-func main()  {
+func main() {
 	goboiler.Demo()
 }

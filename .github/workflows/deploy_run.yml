@@ -1,10 +1,10 @@
 name: Cloud Run Deploy
 on:
   push:
+    branches:
+      - infra
 #    paths:
 #      - ".github/workflows/deploy_run.yml"
-    branch:
-      - run
 env:
   GCP_PROJECT: go-boiler
   GCP_PROJECT_NUM: 1016340168594
