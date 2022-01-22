@@ -1,4 +1,4 @@
-FROM golang:1.16-alpine AS build-env
+FROM golang:1.17-alpine AS build-env
 
 WORKDIR /app
 COPY go.mod .
@@ -7,8 +7,8 @@ RUN apk add --no-cache upx && \
     go version && \
     go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -ldflags '-w -s' -o /go/bin/longcat && \
-    upx /go/bin/longcat
+RUN CGO_ENABLED=0 go build -trimpath -ldflags '-w -s' -o /go/bin/api && upx /go/bin/api
+
 FROM scratch
-COPY --from=build-env /go/bin/longcat /go/bin/longcat
-ENTRYPOINT ["/go/bin/longcat"]
+COPY --from=build-env /go/bin/api /go/bin/api
+ENTRYPOINT ["/go/bin/api"]

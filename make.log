@@ -1,0 +1,73 @@
+```
+% make create-ci-sa
+gcloud iam service-accounts create "ci-user" \
+                --project=go-boiler \
+                --display-name "CI User Service Account"
+Created service account [ci-user].
+```
+
+```
+% make grant-role-ci
+gcloud projects add-iam-policy-binding go-boiler \
+                --member serviceAccount:ci-user@go-boiler.iam.gserviceaccount.com \
+                --role roles/owner
+Updated IAM policy for project [go-boiler].
+bindings:
+- members:
+  - serviceAccount:ci-user@go-boiler.iam.gserviceaccount.com
+  - user:hayashida.trash01@gmail.com
+  - user:masayuki.hayashida@bulbcorp.jp
+  role: roles/owner
+etag: BwXPpY6ZgWA=
+version: 1
+```
+
+```
+ % make enable
+gcloud services enable iamcredentials.googleapis.com --project go-boiler
+Operation "operations/acf.p2-1016340168594-75442d83-b4ee-4f84-b0e0-ff65f71a5947" finished successfully.
+```
+
+```
+% make create_pool
+gcloud iam workload-identity-pools create "github-actions" \
+                --project=go-boiler --location="global" \
+                --display-name="use from GitHub Actions"
+Created workload identity pool [github-actions].
+```
+
+```
+ % make show_pool_id
+projects/1016340168594/locations/global/workloadIdentityPools/github-actions
+```
+
+```
+% make create-policy
+gcloud iam service-accounts add-iam-policy-binding "ci-user@go-boiler.iam.gserviceaccount.com" \
+        --project="go-boiler" \
+        --role="roles/iam.workloadIdentityUser" \
+        --member="principalSet://iam.googleapis.com/projects/1016340168594/locations/global/workloadIdentityPools/github-actions/attribute.repository/hayashiki/go-boiler"
+Updated IAM policy for serviceAccount [ci-user@go-boiler.iam.gserviceaccount.com].
+bindings:
+- members:
+  - principalSet://iam.googleapis.com/projects/1016340168594/locations/global/workloadIdentityPools/github-actions/attribute.repository/hayashiki/go-boiler
+  role: roles/iam.workloadIdentityUser
+etag: BwXPpZ32Nx0=
+version: 1
+```
+
+```
+make create-provider
+gcloud iam workload-identity-pools providers create-oidc "gha-provider" \
+        --project="go-boiler" --location="global" \
+        --workload-identity-pool=""github-actions"" \
+        --display-name="use from GitHub Actions provider" \
+        --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.actor=assertion.actor,attribute.aud=assertion.aud" \
+        --issuer-uri="https://token.actions.githubusercontent.com"
+Created workload identity pool provider [gha-provider].
+```
+
+```
+ % gsutil mb -p go-boiler -l asia-northeast1 -b on gs://go-boiler-tf-state
+Creating gs://go-boiler-tf-state/...
+```

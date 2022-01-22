@@ -2,5 +2,13 @@ package goboiler
 
 var (
 	version  = "0.0.1"
-	revision = ""
+	revision = "HEAD"
 )
+
+func Version() string {
+	return version
+}
+
+func Revision() string {
+	return revision
+}

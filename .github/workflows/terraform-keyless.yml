@@ -1,0 +1,88 @@
+name: oice federation
+
+on:
+  push:
+    branches:
+      - infra
+    paths-ignore:
+      - '**/README.md'
+env:
+  GCP_PROJECT: go-boiler
+  GCP_PROJECT_NUM: 1016340168594
+#  REPO_NAME: renderer
+  REGION: asia-northeast1
+  BUCKET_NAME: go-boiler-tf-state
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: 'write'
+
+    steps:
+      - uses: 'google-github-actions/setup-gcloud@master'
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0.3.1'
+        with:
+          create_credentials_file: true
+          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
+          service_account: 'ci-user@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com'
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - id: 'gcloud'
+        name: 'gcloud'
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+          gcloud config list
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+#      - name: Create tf state bucket
+#        run: |-
+#          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -rescursive -check
+        working-directory: ./terraform
+
+      - name: Terraform init
+        id: init
+        run: |-
+          terraform init
+        continue-on-error: false
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        id: plan
+        run: |-
+          terraform plan -no-color \
+          -out=PLAN
+        #            \-var="project=${{ env.GCP_PROJECT }}" \
+#           -var="env=prod" \
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Terraform Apply
+        id: apply
+        run: |-
+          terraform apply PLAN
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
