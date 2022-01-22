@@ -73,6 +73,13 @@ $(GOBIN)/ghr:
 	cd && go get github.com/tcnksm/ghr
 
 
+# deploy for local
+deploy:
+	docker build -t $SERVICE_NAME .
+	docker tag SERVICE_NAME gcr.io/$GCP_PROJECT/SERVICE_NAME:latest # github.shaとかコミットハッシュつけたほうがよい
+	docker push gcr.io/$GCP_PROJECT/$SERVICE_NAME:latest # github.shaとかコミットハッシュつけたほうがよい
+
+
 ########################
 ### Terraform GCS    ###
 ########################
@@ -125,15 +132,16 @@ show_pool_id:
 
 create-policy:
 	gcloud iam service-accounts add-iam-policy-binding ${CI_SA_EMAIL} \
-	--project="${GCP_PROJECT}" \
+	--project=${GCP_PROJECT} \
 	--role="roles/iam.workloadIdentityUser" \
 	--member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${GITHUB_REPO}"
 
 # # PoolにProviderを作成する
 create-provider:
-	gcloud iam workload-identity-pools providers create-oidc "${PROVIDER_NAME}" \
-	--project="${GCP_PROJECT}" --location="global" \
-	--workload-identity-pool="${POOL_NAME}" \
+	gcloud iam workload-identity-pools providers create-oidc ${PROVIDER_NAME} \
+	--project=${GCP_PROJECT} --location="global" \
+	--workload-identity-pool=${POOL_NAME} \
 	--display-name="use from GitHub Actions provider" \
 	--attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.actor=assertion.actor,attribute.aud=assertion.aud" \
 	--issuer-uri="https://token.actions.githubusercontent.com"
+
