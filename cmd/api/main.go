@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	goboler "github.com/hayashiki/go-boiler"
 	"google.golang.org/api/iterator"
 
 	"github.com/go-chi/chi"
@@ -48,13 +49,15 @@ func main() {
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "v0.0.2")
+	fmt.Fprintf(w, goboler.Version(), goboler.Revision())
 }
 
 // GCSのロールを与えて権限確認する
 func gcs(w http.ResponseWriter, r *http.Request) {
 	gcsClient, err := storage.NewClient(r.Context())
-
+	if err != nil {
+		return
+	}
 	defer func() {
 		err := gcsClient.Close()
 		if err != nil {

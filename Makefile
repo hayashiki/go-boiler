@@ -145,8 +145,9 @@ create-provider:
 	--attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.actor=assertion.actor,attribute.aud=assertion.aud" \
 	--issuer-uri="https://token.actions.githubusercontent.com"
 
-golint: $(GOBIN)/golangci-lint
-	golangci-lint run --tests=0 --disable-all -E goimports -E gofmt
+lint: $(GOBIN)/golangci-lint
+	golangci-lint run -c .golangci.yml --tests=0
+	#golangci-lint run --tests=0 --disable-all -E goimports -E gofmt
 
 $(GOBIN)/golangci-lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
