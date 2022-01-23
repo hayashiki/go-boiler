@@ -9,7 +9,7 @@ on:
 env:
   GCP_PROJECT: go-boiler
   GCP_PROJECT_NUM: 1016340168594
-#  REPO_NAME: renderer
+  #  REPO_NAME: renderer
   REGION: asia-northeast1
   BUCKET_NAME: go-boiler-tf-state
 jobs:
@@ -45,14 +45,15 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-#      - name: Create tf state bucket
-#        run: |-
-#          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
-
-      - name: Terraform Format
+      #      - name: Create tf state bucket
+      #        run: |-
+      #          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
+      - name: Terraform format
         id: fmt
+        if: steps.diff.outputs.diff
         run: terraform fmt -check -recursive
         working-directory: ./terraform
+        continue-on-error: true
 
       - name: Terraform init
         id: init
@@ -74,7 +75,7 @@ jobs:
           terraform plan -no-color \
           -out=PLAN
         #            \-var="project=${{ env.GCP_PROJECT }}" \
-#           -var="env=prod" \
+        #           -var="env=prod" \
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
