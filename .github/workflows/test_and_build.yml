@@ -1,10 +1,49 @@
-#on: [push, pull_request]
+name: test-and-build
 on:
+  push:
+    branches:
+      - main
+      - infra
   pull_request:
-    paths:
-      - ".github/workflows/test.yml"
-name: Test
+    branches:
+      - main
+      - infra
+env:
+  DOCKER_REPO: hayashiki/go-boiler
+  IMAGE_NAME: go-boiler
+  IMAGE_TAG: latest
 jobs:
+  docker_push:
+    if: github.event_name == 'push'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup docker buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and push docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.DOCKER_REPO }}:${{ env.IMAGE_TAG }}
   lint:
     name: Lint
     runs-on: ubuntu-latest
