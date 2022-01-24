@@ -37,10 +37,10 @@ jobs:
         uses: actions/checkout@v2
 
       - id: 'gcloud'
-        name: 'gcloud'
+        name: 'Authenticate and deploy'
         run: |-
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
-          gcloud config list
+          gcloud --quiet auth configure-docker
 
       - name: Push Docker Image to Prod GCR
         #        if: contains(github.ref, 'tags/v')

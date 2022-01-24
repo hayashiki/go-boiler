@@ -21,7 +21,7 @@ jobs:
       id-token: 'write'
 
     steps:
-      - uses: 'google-github-actions/setup-gcloud@master'
+      - uses: 'google-github-actions/setup-gcloud@v0'
         with:
           project_id: ${{ env.GCP_PROJECT }}
 
