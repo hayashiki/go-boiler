@@ -1,4 +1,4 @@
-name: oice federation
+name: terraform with oicd federation
 
 on:
   push:
@@ -42,6 +42,13 @@ jobs:
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
           gcloud config list
 
+      - name: Push Docker Image to Prod GCR
+        #        if: contains(github.ref, 'tags/v')
+        run: |
+          docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
+          docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
@@ -50,7 +57,6 @@ jobs:
       #          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
       - name: Terraform format
         id: fmt
-        if: steps.diff.outputs.diff
         run: terraform fmt -check -recursive
         working-directory: ./terraform
         continue-on-error: true
@@ -79,6 +85,14 @@ jobs:
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Set image_tag
+        run: |
+#          tag=$(echo "${{ github.event.inputs.tag }}" | sed "s/^v//")
+#          if [ -z "$tag" ]; then
+#            exit 1
+#          fi
+          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
 
       - name: Terraform Apply
         id: apply
