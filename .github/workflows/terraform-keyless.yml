@@ -87,11 +87,7 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
       - name: Set image_tag
-        run: |
-#          tag=$(echo "${{ github.event.inputs.tag }}" | sed "s/^v//")
-#          if [ -z "$tag" ]; then
-#            exit 1
-#          fi
+        run: |-
           echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
 
       - name: Terraform Apply
