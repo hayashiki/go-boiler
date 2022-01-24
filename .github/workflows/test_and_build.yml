@@ -53,7 +53,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.43
+          version: latest
+          args: --config ./.golangci.yml
   test:
     runs-on: ubuntu-latest
     steps:
