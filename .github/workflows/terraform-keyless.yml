@@ -9,7 +9,7 @@ on:
 env:
   GCP_PROJECT: go-boiler
   GCP_PROJECT_NUM: 1016340168594
-  #  REPO_NAME: renderer
+  SERVICE_NAME: go-boiler-api
   REGION: asia-northeast1
   BUCKET_NAME: go-boiler-tf-state
 jobs:
