@@ -10,7 +10,11 @@ on:
       - main
       - infra
 env:
+  GCP_PROJECT: go-boiler-t1
+  GCP_PROJECT_NUM: 573005387472
   DOCKER_REPO: hayashiki/go-boiler
+  SERVICE_NAME: go-boiler-api
+  REGION: asia-northeast1
   IMAGE_NAME: go-boiler-t1
   IMAGE_TAG: latest
 jobs:
