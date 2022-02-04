@@ -7,11 +7,11 @@ on:
     paths-ignore:
       - '**/README.md'
 env:
-  GCP_PROJECT: go-boiler
-  GCP_PROJECT_NUM: 1016340168594
+  GCP_PROJECT: go-boiler-t1
+  GCP_PROJECT_NUM: 573005387472
   SERVICE_NAME: go-boiler-api
   REGION: asia-northeast1
-  BUCKET_NAME: go-boiler-tf-state
+  BUCKET_NAME: go-boiler-t1-tf-state
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -52,9 +52,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      #      - name: Create tf state bucket
-      #        run: |-
-      #          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
       - name: Terraform format
         id: fmt
         run: terraform fmt -check -recursive
