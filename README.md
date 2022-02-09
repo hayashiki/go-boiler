@@ -26,3 +26,6 @@ terraform apply -target=google_project_service.enable_api
 # terraform実行ユーザの作成 
 terraform apply -target=google_service_account.github_actions
 terraform apply -target=google_project_iam_member.github_actions_default
+
+terraform apply -target=google_iam_workload_identity_pool.github_pool
+terraform apply -target=google_iam_workload_identity_pool_provider.github_provider

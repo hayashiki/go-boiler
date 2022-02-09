@@ -37,7 +37,7 @@ jobs:
         uses: 'google-github-actions/auth@v0.3.1'
         with:
           create_credentials_file: true
-          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
+          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions'
           service_account: 'github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com'
 
       - name: Check out code into the Go module directory
