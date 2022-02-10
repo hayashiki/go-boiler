@@ -1,3 +1,4 @@
+// gcloud run deployで対応するパターン
 name: Cloud Run Deploy
 on:
   push:

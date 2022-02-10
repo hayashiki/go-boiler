@@ -1,8 +1,3 @@
-# Google beta provider
-provider "google-beta" {
-  project = var.project
-}
-
 resource "google_iam_workload_identity_pool" "github_pool" {
   provider                  = google-beta
   workload_identity_pool_id = "github-actions"

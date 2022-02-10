@@ -16,7 +16,6 @@ env:
   SERVICE_NAME: go-boiler-api
   REGION: asia-northeast1
   IMAGE_NAME: go-boiler-t1
-  IMAGE_TAG: latest
 jobs:
   docker_push:
     if: github.event_name == 'push'
@@ -25,35 +24,40 @@ jobs:
 
     permissions:
       contents: read
-      id-token: 'write'
+      id-token: write
 
     steps:
-      - uses: 'google-github-actions/setup-gcloud@v0'
+      - uses: google-github-actions/setup-gcloud@v0
         with:
           project_id: ${{ env.GCP_PROJECT }}
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0.3.1'
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0.3.1
         with:
           create_credentials_file: true
-          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions'
-          service_account: 'github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com'
+          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - id: 'gcloud'
-        name: 'Authenticate and deploy'
+      - id: gcloud
+        name: Configure GCR Docker auth
         run: |-
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
           gcloud --quiet auth configure-docker
 
-      - name: Push Docker Image to Prod GCR
-        #        if: contains(github.ref, 'tags/v')
+      #        if: contains(github.ref, 'tags/v')
+      - name: Build docker image
         run: |
           docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
+      - name: Tag docker image
+        run: |
           docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:latest
+      - name: Push Docker Image to GCR
+        run: |
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
   lint:
     name: Lint

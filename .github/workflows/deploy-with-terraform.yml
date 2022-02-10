@@ -1,37 +1,39 @@
+// terraformでデプロイする
 name: terraform with oicd federation
 
 on:
   push:
     branches:
-      - infra
+      - release
     paths-ignore:
       - '**/README.md'
 env:
   GCP_PROJECT: go-boiler-t1
   GCP_PROJECT_NUM: 573005387472
+  DOCKER_REPO: hayashiki/go-boiler
   SERVICE_NAME: go-boiler-api
   REGION: asia-northeast1
-  BUCKET_NAME: go-boiler-t1-tf-state
+  IMAGE_NAME: go-boiler-t1
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
-      id-token: 'write'
+      id-token: write
 
     steps:
-      - uses: 'google-github-actions/setup-gcloud@v0'
+      - uses: google-github-actions/setup-gcloud@v0
         with:
           project_id: ${{ env.GCP_PROJECT }}
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0.3.1'
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0.3.1
         with:
           create_credentials_file: true
-          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
-          service_account: 'ci-user@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com'
+          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
