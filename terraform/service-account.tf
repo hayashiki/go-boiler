@@ -16,6 +16,7 @@ resource "google_project_iam_member" "github_actions_default" {
     "roles/cloudbuild.builds.builder",
     "roles/iam.serviceAccountUser",
     "roles/run.admin",
+    "roles/serviceusage.serviceUsageAdmin", // Enable APIs using serviceusage
   ])
   member = "serviceAccount:${google_service_account.github_actions.email}"
   role   = each.value

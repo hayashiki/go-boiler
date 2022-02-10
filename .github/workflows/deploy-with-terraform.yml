@@ -44,12 +44,13 @@ jobs:
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
           gcloud --quiet auth configure-docker
 
-      - name: Push Docker Image to Prod GCR
-        #        if: contains(github.ref, 'tags/v')
-        run: |
-          docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
-          docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+# pushされている前提
+#      - name: Push Docker Image to Prod GCR
+#        #        if: contains(github.ref, 'tags/v')
+#        run: |
+#          docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
+#          docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+#          docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
