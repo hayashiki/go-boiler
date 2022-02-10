@@ -1,4 +1,4 @@
-// terraformでデプロイする
+# terraformでデプロイする
 name: terraform with oicd federation
 
 on:
