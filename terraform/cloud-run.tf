@@ -15,7 +15,7 @@ resource "google_cloud_run_service" "default" {
 
   template {
     spec {
-#      service_account_name = var.service_account
+      service_account_name = google_service_account.run_sa.email
 
       containers {
         image = local.image
