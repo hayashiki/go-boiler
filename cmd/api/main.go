@@ -3,17 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
-	"go.opentelemetry.io/otel"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/oauth2/google"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"golang.org/x/oauth2/google"
 
 	goboler "github.com/hayashiki/go-boiler"
 	"google.golang.org/api/iterator"
@@ -106,10 +106,6 @@ func gcs(w http.ResponseWriter, r *http.Request) {
 	}
 	////log.Printf("string %s", string)
 	w.Write(b)
-}
-
-type handler struct {
-	trace trace.Tracer
 }
 
 func project(w http.ResponseWriter, r *http.Request) {
