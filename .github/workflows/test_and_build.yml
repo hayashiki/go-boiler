@@ -110,6 +110,11 @@ jobs:
           workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
           service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
 
+      - id: gcloud
+        name: Gcloud auth login
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
