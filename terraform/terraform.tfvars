@@ -1,2 +1,2 @@
 env     = "prod"
-project = "go-boiler"
+project = "go-boiler-t1"

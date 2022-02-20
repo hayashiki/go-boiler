@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"golang.org/x/oauth2/google"
 	"io"
 	"log"
 	"net/http"
@@ -42,6 +44,7 @@ func main() {
 
 	r.Get("/", health)
 	r.Post("/", health)
+	r.Get("/project_id", project)
 	r.Get("/health", health)
 	r.Get("/gcs", gcs)
 	log.Print("Listening on port 8080")
@@ -86,6 +89,27 @@ func gcs(w http.ResponseWriter, r *http.Request) {
 	}
 	////log.Printf("string %s", string)
 	w.Write(b)
+}
+
+func project(w http.ResponseWriter, r *http.Request) {
+	projectID, err := getProjectID(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.Write([]byte(projectID))
+}
+
+func getProjectID(ctx context.Context) (string, error) {
+	cred, err := google.FindDefaultCredentials(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to find default credentials: %w", err)
+	}
+
+	if cred.ProjectID == "" {
+		return "", fmt.Errorf("not found")
+	}
+
+	return cred.ProjectID, nil
 }
 
 //func getIam(w http.ResponseWriter, r *http.Request) {

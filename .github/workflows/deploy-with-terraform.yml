@@ -1,58 +1,65 @@
-name: oice federation
+# terraformでデプロイする
+name: terraform with oicd federation
 
 on:
   push:
     branches:
-      - infra
+      - release
     paths-ignore:
       - '**/README.md'
 env:
-  GCP_PROJECT: go-boiler
-  GCP_PROJECT_NUM: 1016340168594
-#  REPO_NAME: renderer
+  GCP_PROJECT: go-boiler-t1
+  GCP_PROJECT_NUM: 573005387472
+  DOCKER_REPO: hayashiki/go-boiler
+  SERVICE_NAME: go-boiler-api
   REGION: asia-northeast1
-  BUCKET_NAME: go-boiler-tf-state
+  IMAGE_NAME: go-boiler-t1
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
-      id-token: 'write'
+      id-token: write
 
     steps:
-      - uses: 'google-github-actions/setup-gcloud@master'
+      - uses: google-github-actions/setup-gcloud@v0
         with:
           project_id: ${{ env.GCP_PROJECT }}
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0.3.1'
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0.3.1
         with:
           create_credentials_file: true
-          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/gha-provider'
-          service_account: 'ci-user@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com'
+          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
       - id: 'gcloud'
-        name: 'gcloud'
+        name: 'Authenticate and deploy'
         run: |-
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
-          gcloud config list
+          gcloud --quiet auth configure-docker
+
+# pushされている前提
+#      - name: Push Docker Image to Prod GCR
+#        #        if: contains(github.ref, 'tags/v')
+#        run: |
+#          docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
+#          docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+#          docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-#      - name: Create tf state bucket
-#        run: |-
-#          if ! gsutil ls | grep gs://${{ env.BUCKET_NAME }}; then gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.REGION }} -b on gs://${{ env.BUCKET_NAME }};fi
-
-      - name: Terraform Format
+      - name: Terraform format
         id: fmt
-        run: terraform fmt -rescursive -check
+        run: terraform fmt -check -recursive
         working-directory: ./terraform
+        continue-on-error: true
 
       - name: Terraform init
         id: init
@@ -74,10 +81,14 @@ jobs:
           terraform plan -no-color \
           -out=PLAN
         #            \-var="project=${{ env.GCP_PROJECT }}" \
-#           -var="env=prod" \
+        #           -var="env=prod" \
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Set image_tag
+        run: |-
+          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
 
       - name: Terraform Apply
         id: apply

@@ -1,10 +1,110 @@
-#on: [push, pull_request]
+name: test-and-build
 on:
+  push:
+    branches:
+      - main
+      - infra
+      - feature/*
   pull_request:
-    paths:
-      - ".github/workflows/test.yml"
-name: Test
+    branches:
+      - main
+      - infra
+env:
+  GCP_PROJECT: go-boiler-t1
+  GCP_PROJECT_NUM: 573005387472
+  DOCKER_REPO: hayashiki/go-boiler
+  SERVICE_NAME: go-boiler-api
+  REGION: asia-northeast1
+  IMAGE_NAME: go-boiler-t1
 jobs:
+  docker_push:
+    if: github.event_name == 'push'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0.3.1
+        with:
+          create_credentials_file: true
+          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - id: gcloud
+        name: Configure GCR Docker auth
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+          gcloud --quiet auth configure-docker
+
+      #        if: contains(github.ref, 'tags/v')
+      - name: Build docker image
+        run: |
+          docker build -t ${{ env.SERVICE_NAME }} -f cmd/api/Dockerfile .
+      - name: Tag docker image
+        run: |
+          docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker tag ${{ env.SERVICE_NAME }} gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:latest
+      - name: Push Docker Image to GCR
+        run: |
+          docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform format
+        id: fmt
+        run: terraform fmt -check -recursive
+        working-directory: ./terraform
+        continue-on-error: true
+
+      - name: Terraform init
+        id: init
+        run: |-
+          terraform init
+        continue-on-error: false
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        id: plan
+        run: |-
+          terraform plan -no-color \
+          -out=PLAN
+        #            \-var="project=${{ env.GCP_PROJECT }}" \
+        #           -var="env=prod" \
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Set image_tag
+        run: |-
+          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
+
+      - name: Terraform Apply
+        id: apply
+        run: |-
+          terraform apply PLAN
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -13,7 +113,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.43
+          version: latest
+          args: --config ./.golangci.yml
   test:
     runs-on: ubuntu-latest
     steps:
@@ -35,3 +136,27 @@ jobs:
             ${{ runner.os }}-go-
       - name: Test
         run: go test ./...
+#  deploy:
+#    if: github.event_name == 'push'
+#    needs: [docker_push]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - uses: google-github-actions/setup-gcloud@v0
+#        with:
+#          project_id: ${{ env.GCP_PROJECT }}
+#
+#      - id: auth
+#        name: Authenticate to Google Cloud
+#        uses: google-github-actions/auth@v0.3.1
+#        with:
+#          create_credentials_file: true
+#          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+#          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
+#
+#      - id: gcloud
+#        name: Gcloud auth login
+#        run: |-
+#          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
