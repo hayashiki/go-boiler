@@ -26,7 +26,7 @@ resource "google_service_account" "run_sa" {
   display_name = "api server identity"
 }
 
-resource "google_project_iam_member" "github_actions_default" {
+resource "google_project_iam_member" "run_sa_default" {
   project = var.project
   for_each = toset([
     "roles/logging.logWriter",
