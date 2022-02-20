@@ -90,3 +90,54 @@ jobs:
             ${{ runner.os }}-go-
       - name: Test
         run: go test ./...
+  deploy:
+    if: github.event_name == 'push'
+    needs: [docker_push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform format
+        id: fmt
+        run: terraform fmt -check -recursive
+        working-directory: ./terraform
+        continue-on-error: true
+
+      - name: Terraform init
+        id: init
+        run: |-
+          terraform init
+        continue-on-error: false
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        id: plan
+        run: |-
+          terraform plan -no-color \
+          -out=PLAN
+        #            \-var="project=${{ env.GCP_PROJECT }}" \
+        #           -var="env=prod" \
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Set image_tag
+        run: |-
+          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
+
+      - name: Terraform Apply
+        id: apply
+        run: |-
+          terraform apply PLAN
+        working-directory: ./terraform
+        env:
+          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
