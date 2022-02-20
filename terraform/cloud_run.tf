@@ -5,7 +5,7 @@ data "google_cloud_run_service" "default" {
 
 locals {
   current_image = data.google_cloud_run_service.default.template != null ? data.google_cloud_run_service.default.template.0.spec.0.containers.0.image : null
-  new_image     = "gcr.io/go-boiler-t1/go-boiler-api:${var.image_tag}"
+  new_image     = "gcr.io/${var.project}/go-boiler-api:${var.image_tag}"
   image         = (local.current_image != null && var.image_tag == "latest") ? local.current_image : local.new_image
 }
 
