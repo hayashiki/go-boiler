@@ -59,61 +59,6 @@ jobs:
       - name: Push Docker Image to GCR
         run: |
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          args: --config ./.golangci.yml
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.17.x
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            ~/Library/Caches/go-build
-            %LocalAppData%\go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: Test
-        run: go test ./...
-  deploy:
-    if: github.event_name == 'push'
-    needs: [docker_push]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - uses: google-github-actions/setup-gcloud@v0
-        with:
-          project_id: ${{ env.GCP_PROJECT }}
-
-      - id: auth
-        name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v0.3.1
-        with:
-          create_credentials_file: true
-          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
-          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
-
-      - id: gcloud
-        name: Gcloud auth login
-        run: |-
-          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -160,4 +105,58 @@ jobs:
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          args: --config ./.golangci.yml
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Test
+        run: go test ./...
+#  deploy:
+#    if: github.event_name == 'push'
+#    needs: [docker_push]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - uses: google-github-actions/setup-gcloud@v0
+#        with:
+#          project_id: ${{ env.GCP_PROJECT }}
+#
+#      - id: auth
+#        name: Authenticate to Google Cloud
+#        uses: google-github-actions/auth@v0.3.1
+#        with:
+#          create_credentials_file: true
+#          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+#          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
+#
+#      - id: gcloud
+#        name: Gcloud auth login
+#        run: |-
+#          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
