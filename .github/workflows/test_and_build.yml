@@ -59,6 +59,7 @@ jobs:
       - name: Push Docker Image to GCR
         run: |
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:latest
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
