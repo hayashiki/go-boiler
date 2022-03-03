@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/storage v1.18.2
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.3.0
 	github.com/go-chi/chi v1.5.4
-	github.com/rs/cors v1.8.0
+	github.com/rs/cors v1.8.2
 	go.opentelemetry.io/otel v1.4.1
 	go.opentelemetry.io/otel/sdk v1.4.1
 	go.uber.org/zap v1.21.0
