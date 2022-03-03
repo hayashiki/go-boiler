@@ -1,0 +1,63 @@
+name-template: 'v$RESOLVED_VERSION 📦'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: '🧹 Maintenance'
+    labels:
+      - 'chore'
+      - 'dependencies'
+change-template: '- #$NUMBER $TITLE (@$AUTHOR)'
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+#version-resolver:
+#  major:
+#    labels:
+#      - 'release/major'
+#  minor:
+#    labels:
+#      - 'release/minor'
+#  patch:
+#    labels:
+#      - 'release/patch'
+#  default: patch
+template: |
+  ## What's new
+
+  $CHANGES
+autolabeler:
+  - label: feature
+    branch:
+      - '/^feat(ure)?[/-].+/'
+  - label: bug
+    branch:
+      - '/^fix[/-].+/'
+  - label: chore
+    branch:
+      - '/^chore[/-].+/'
+  - label: doc
+    branch:
+      - '/doc(umentation)[/-].+/'
+    files:
+      - '*.md'
+  - label: github
+    files:
+      - '.github/**/*'
+  - label: terraform
+    files:
+      - 'terraform/**/*'

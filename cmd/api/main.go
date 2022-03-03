@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"golang.org/x/oauth2/google"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"golang.org/x/oauth2/google"
 
 	goboler "github.com/hayashiki/go-boiler"
 	"google.golang.org/api/iterator"
@@ -22,6 +26,19 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
+	exporter, err := texporter.New()
+	if err != nil {
+		log.Print(err)
+	}
+	tp := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter))
+	defer func() {
+		_ = tp.Shutdown(ctx)
+	}()
+	otel.SetTracerProvider(tp)
+	//trace := otel.Tracer("go-boiler")
+
 	r := chi.NewRouter()
 	// CORS
 	r.Use(cors.New(cors.Options{
@@ -92,7 +109,11 @@ func gcs(w http.ResponseWriter, r *http.Request) {
 }
 
 func project(w http.ResponseWriter, r *http.Request) {
-	projectID, err := getProjectID(r.Context())
+	tracer := otel.Tracer("go-boiler")
+	ctx, span := tracer.Start(r.Context(), "request.project")
+	defer span.End()
+
+	projectID, err := getProjectID(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}

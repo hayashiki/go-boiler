@@ -37,7 +37,6 @@ resource "google_project_iam_member" "run_sa_default" {
     "roles/cloudbuild.builds.builder",
     "roles/iam.serviceAccountUser",
     "roles/run.admin",
-    "roles/serviceusage.serviceUsageAdmin", // Enable APIs using serviceusage
     "roles/storage.admin",
   ])
   member = "serviceAccount:${google_service_account.github_actions.email}"

@@ -10,12 +10,10 @@ on:
       - main
       - infra
 env:
-  GCP_PROJECT: go-boiler-t1
-  GCP_PROJECT_NUM: 573005387472
-  DOCKER_REPO: hayashiki/go-boiler
+  GCP_PROJECT: ${{secrets.GCP_PROJECT}}
+  GCP_PROJECT_NUM: ${{secrets.GCP_PROJECT_NUM}}
   SERVICE_NAME: go-boiler-api
   REGION: asia-northeast1
-  IMAGE_NAME: go-boiler-t1
 jobs:
   docker_push:
     if: github.event_name == 'push'
@@ -59,6 +57,7 @@ jobs:
       - name: Push Docker Image to GCR
         run: |
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:latest
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -83,6 +82,7 @@ jobs:
         run: terraform validate -no-color
         working-directory: ./terraform
 
+# TODO: Refine https://github.com/SBiliarski/TADevOpsFinalProject/blob/6f10acdccd4ee9b65e1c2e99fb36a9b84566666c/.github/workflows/ghactions.yml
       - name: Terraform Plan
         id: plan
         run: |-
