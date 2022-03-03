@@ -1,4 +1,4 @@
-BIN := longcat
+BIN := goboiler
 VERSION := $$(make -s show-version)
 CURRENT_REVISION := $(shell git rev-parse --short HEAD)
 BUILD_LDFLAGS := "-s -w -X main.revision=$(CURRENT_REVISION)"
@@ -37,10 +37,10 @@ $(GOBIN)/gobump:
 
 .PHONY: cross
 cross: $(GOBIN)/goxz
-	goxz -n $(BIN) -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) .
+	goxz -n $(BIN) -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) cmd/api/main.go
 
 $(GOBIN)/goxz:
-	cd && go get github.com/Songmu/goxz/cmd/goxz
+	cd && go install github.com/Songmu/goxz/cmd/goxz@latest
 
 .PHONY: test
 test: build
