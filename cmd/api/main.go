@@ -30,7 +30,7 @@ func main() {
 
 	exporter, err := texporter.New()
 	if err != nil {
-		panic(err)
+		log.Print(err)
 	}
 	tp := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter))
 	defer func() {

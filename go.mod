@@ -9,7 +9,7 @@ require (
 	github.com/rs/cors v1.8.0
 	go.opentelemetry.io/otel v1.4.1
 	go.opentelemetry.io/otel/sdk v1.4.1
-	go.opentelemetry.io/otel/trace v1.4.1
+	go.uber.org/zap v1.21.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	google.golang.org/api v0.68.0
 	rsc.io/quote v1.5.2
@@ -28,6 +28,9 @@ require (
 	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.opentelemetry.io/otel/metric v0.27.0 // indirect
+	go.opentelemetry.io/otel/trace v1.4.1 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
 	golang.org/x/text v0.3.7 // indirect
@@ -36,6 +39,5 @@ require (
 	google.golang.org/genproto v0.0.0-20220207185906-7721543eae58 // indirect
 	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	rsc.io/sampler v1.3.0 // indirect
 )
