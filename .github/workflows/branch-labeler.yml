@@ -1,0 +1,14 @@
+# これがリリースされれば不要になる https://github.com/actions/labeler/pull/203
+name: PullRequest Labeler
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  Labeling:
+    name: Labeling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: TimonVS/pr-labeler-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
