@@ -1,7 +1,7 @@
 package goboiler
 
 var (
-	version  = "0.0.4"
+	version  = "0.0.8"
 	revision = "HEAD"
 )
 
