@@ -25,21 +25,11 @@ version-resolver:
     labels:
       - 'patch'
   default: patch
-#version-resolver:
-#  major:
-#    labels:
-#      - 'release/major'
-#  minor:
-#    labels:
-#      - 'release/minor'
-#  patch:
-#    labels:
-#      - 'release/patch'
-#  default: patch
 template: |
   ## What's new
 
   $CHANGES
+# tag push方式だと微妙につかえない
 autolabeler:
   - label: feature
     branch:
@@ -55,7 +45,7 @@ autolabeler:
       - '/doc(umentation)[/-].+/'
     files:
       - '*.md'
-  - label: github
+  - label: actions
     files:
       - '.github/**/*'
   - label: terraform
