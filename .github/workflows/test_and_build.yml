@@ -1,22 +1,21 @@
-name: test-and-build
+name: Build and Deploy to Cloud Run on Preview
 on:
   push:
     branches:
       - main
-      - infra
-      - feature/*
   pull_request:
+    types: [synchronize, opened, reopened, closed]
     branches:
       - main
-      - infra
 env:
   GCP_PROJECT: ${{secrets.GCP_PROJECT}}
   GCP_PROJECT_NUM: ${{secrets.GCP_PROJECT_NUM}}
-  SERVICE_NAME: go-boiler-api
+#  SERVICE_NAME: go-boiler-api
+#  SERVICE_NAME: preview-${{ github.event.number }}
   REGION: asia-northeast1
 jobs:
-  docker_push:
-    if: github.event_name == 'push'
+  build_and_push_and_deploy:
+    if: github.event_name == 'push' || github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
     needs: [lint, test]
     runs-on: ubuntu-latest
 
@@ -25,6 +24,12 @@ jobs:
       id-token: write
 
     steps:
+      - run: echo "SERVICE_NAME=go-boiler-api" >> $GITHUB_ENV
+        if: github.event_name == 'push'
+      - run: echo "SERVICE_NAME=preview-${{ github.event.number }}" >> $GITHUB_ENV
+        if: github.event_name == 'pull_request'
+      - run: |
+          echo "ths is env=${{ env.SERVICE_NAME }}"
       - uses: google-github-actions/setup-gcloud@v0
         with:
           project_id: ${{ env.GCP_PROJECT }}
@@ -62,11 +67,11 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Terraform format
-        id: fmt
-        run: terraform fmt -check -recursive
+      - name: Set image_tag
         working-directory: ./terraform
-        continue-on-error: true
+        run: |-
+          echo "image_tag = \"${{ github.sha }}\"" >> terraform.tfvars
+          echo "name = \"${{ env.SERVICE_NAME }}\"" >> terraform.tfvars
 
       - name: Terraform init
         id: init
@@ -76,6 +81,12 @@ jobs:
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+        working-directory: ./terraform
+        continue-on-error: true
 
       - name: Terraform Validate
         id: validate
@@ -93,10 +104,6 @@ jobs:
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-
-      - name: Set image_tag
-        run: |-
-          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
 
       - name: Terraform Apply
         id: apply

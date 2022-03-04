@@ -1,22 +1,36 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
+    assignees:
+      - hayashiki
+    labels:
+      - dependencies
+      - go
     schedule:
       interval: "weekly"
+      time: "06:00"
+      timezone: Asia/Tokyo
 #      interval: "daily"
 
   - package-ecosystem: "docker"
     directory: "/"
+    assignees:
+      - hayashiki
+    labels:
+      - dependencies
+      - go
     schedule:
+      time: "06:00"
+      timezone: Asia/Tokyo
       interval: "weekly"
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    labels:
+      - dependencies
+      - go
     schedule:
+      time: "06:00"
+      timezone: Asia/Tokyo
       interval: "weekly"

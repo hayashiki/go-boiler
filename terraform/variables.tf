@@ -15,16 +15,6 @@ variable "name" {
   default = "go-boiler-api"
 }
 
-variable "gar_repository" {
-  type    = string
-  default = "hayashiki"
-}
-
-variable "image_name" {
-  type    = string
-  default = "go-boiler-api"
-}
-
 variable "image_tag" {
   type    = string
   default = "latest"
