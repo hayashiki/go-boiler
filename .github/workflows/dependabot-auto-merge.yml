@@ -29,7 +29,7 @@ jobs:
       - name: Test
         run: go test ./...
   dependabot:
-    needs: [tests]
+    needs: [test]
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:

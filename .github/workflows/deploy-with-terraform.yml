@@ -1,12 +1,12 @@
-# TODO: webhook manual deploy version
-name: Deploy to Cloud Run with input docker tag
+name: Deploy to Cloud Run with Input
 
 on:
-  push:
-    branches:
-      - release
-    paths-ignore:
-      - '**/README.md'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "GitHub sha or latest"
+        required: true
+
 env:
   GCP_PROJECT: ${{secrets.GCP_PROJECT}}
   GCP_PROJECT_NUM: ${{secrets.GCP_PROJECT_NUM}}
@@ -21,6 +21,15 @@ jobs:
       id-token: write
 
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+          tag=$(echo "${{ github.event.inputs.tag }}" | sed "s/^v//")
+          if [ -z "$tag" ]; then
+          exit 1
+          fi
+          echo "image_tag = \"$tag\"" >> release.auto.tfvars
+
       - uses: google-github-actions/setup-gcloud@v0
         with:
           project_id: ${{ env.GCP_PROJECT }}
@@ -33,9 +42,6 @@ jobs:
           workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
           service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-
       - id: gcloud
         name: Configure GCR Docker auth
         run: |-
@@ -45,11 +51,10 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Terraform format
-        id: fmt
-        run: terraform fmt -check -recursive
+      - name: Set tfvars
+        run: |-
+          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
         working-directory: ./terraform
-        continue-on-error: true
 
       - name: Terraform init
         id: init
@@ -59,6 +64,12 @@ jobs:
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Terraform format
+        id: fmt
+        run: terraform fmt -check -recursive
+        working-directory: ./terraform
+        continue-on-error: true
 
       - name: Terraform Validate
         id: validate
@@ -75,10 +86,6 @@ jobs:
         working-directory: ./terraform
         env:
           GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-
-      - name: Set image_tag
-        run: |-
-          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
 
       - name: Terraform Apply
         id: apply
