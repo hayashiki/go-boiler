@@ -24,15 +24,6 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Set tfvars
-        working-directory: ./terraform
-        run: |
-          tag=$(echo "${{ github.event.inputs.tag }}" | sed "s/^v//")
-          if [ -z "$tag" ]; then
-          exit 1
-          fi
-          echo "image_tag = \"$tag\"" >> terraform.tfvars
-
       - uses: google-github-actions/setup-gcloud@v0
         with:
           project_id: ${{ env.GCP_PROJECT }}
@@ -55,9 +46,13 @@ jobs:
         uses: hashicorp/setup-terraform@v1
 
       - name: Set tfvars
-        run: |-
-          echo "image_tag = \"${{ github.sha }}\"" >> prod.auto.tfvars
         working-directory: ./terraform
+        run: |
+          tag=$(echo "${{ github.event.inputs.tag }}" | sed "s/^v//")
+          if [ -z "$tag" ]; then
+          exit 1
+          fi
+          echo "image_tag = \"$tag\"" >> terraform.tfvars
 
       - name: Terraform init
         id: init
