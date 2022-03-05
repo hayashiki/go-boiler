@@ -5,7 +5,7 @@ on:
     branches:
       - infra
 #    paths:
-#      - ".github/workflows/deploy_run.yml"
+#      - ".github/workflows/deploy-with-gcloud.yml"
 env:
   GCP_PROJECT: go-boiler
   GCP_PROJECT_NUM: 1016340168594
