@@ -2,8 +2,9 @@ name: trivy
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+#  毎回は不要・・・
+#  pull_request:
+#    branches: [main]
 
 env:
   SERVICE_NAME: go-boiler-api
