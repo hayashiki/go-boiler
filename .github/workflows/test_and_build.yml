@@ -113,7 +113,7 @@ jobs:
 
   cleanup-preview:
     name: Cleanup the Preview
-    if: github.event.action == 'closed' || github.event.action == 'labeled' || github.event.label.name == 'review'
+    if: github.event.action == 'closed' || github.event.action == 'unlabeled' || github.event.label.name == 'review'
     permissions:
       contents: read
       id-token: write
