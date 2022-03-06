@@ -63,17 +63,15 @@ jobs:
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:latest
 
-      - name: Push Docker Image to GCR
-        run: |
-          - name: Deploy
-            run: |-
-              gcloud run deploy ${{ env.SERVICE_NAME }} --image gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-                --project ${{ env.GCP_PROJECT }} \
-                --platform managed \
-                --region ${{ env.REGION }} \
-                --service-account go-boiler-api@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com \
-                --allow-unauthenticated
-              PREVIEW_URL=$(gcloud run services describe ${SERVICE} --format 'value(status.url)')
+      - name: Deploy
+        run: |-
+          gcloud run deploy ${{ env.SERVICE_NAME }} --image gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --project ${{ env.GCP_PROJECT }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --service-account go-boiler-api@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com \
+            --allow-unauthenticated
+          PREVIEW_URL=$(gcloud run services describe ${SERVICE} --format 'value(status.url)')
 
       - name: Notify
         run: |
