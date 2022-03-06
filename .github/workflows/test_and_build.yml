@@ -64,11 +64,11 @@ jobs:
             --region ${{ env.REGION }} \
             --service-account run-invoker@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com \
             --allow-unauthenticated
-          PREVIEW_URL=$(gcloud run services describe ${SERVICE_NAME} --format 'value(status.url)')
+          PREVIEW_URL=$(gcloud run services describe ${SERVICE_NAME} -region ${{ env.REGION }} --format 'value(status.url)')
 
       - name: Notify
         run: |
-          PREVIEW_URL=$(gcloud run services describe ${SERVICE_NAME} --format 'value(status.url)')
+          PREVIEW_URL=$(gcloud run services describe ${SERVICE_NAME} -region ${{ env.REGION }} --format 'value(status.url)')
           curl -X POST \
             --url ${{ github.event.pull_request._links.statuses.href }} \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
@@ -114,6 +114,9 @@ jobs:
   cleanup-preview:
     name: Cleanup the Preview
     if: github.event.action == 'closed' || github.event.action == 'labeled' || github.event.label.name == 'review'
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
