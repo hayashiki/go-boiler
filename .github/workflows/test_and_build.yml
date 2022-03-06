@@ -10,12 +10,11 @@ on:
 env:
   GCP_PROJECT: ${{secrets.GCP_PROJECT}}
   GCP_PROJECT_NUM: ${{secrets.GCP_PROJECT_NUM}}
-#  SERVICE_NAME: go-boiler-api
-#  SERVICE_NAME: preview-${{ github.event.number }}
+  SERVICE_NAME: preview-${{ github.event.number }}
   REGION: asia-northeast1
 jobs:
   build_and_push_and_deploy:
-    if: github.event_name == 'push' || github.event.action == 'labeled' #  || github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
+    if: github.event_name == 'push' || github.event.action == 'labeled' || github.event.label.name == 'review' #  || github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
     needs: [lint, test]
     runs-on: ubuntu-latest
 
@@ -26,12 +25,6 @@ jobs:
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-#      - run: echo "SERVICE_NAME=go-boiler-api" >> $GITHUB_ENV
-#        if: github.event_name == 'push'
-      - run: echo "SERVICE_NAME=preview-${{ github.event.number }}" >> $GITHUB_ENV
-        if: github.event_name == 'pull_request'
-      - run: |
-          echo "SERVICE_NAME is env=${{ env.SERVICE_NAME }}"
       - uses: google-github-actions/setup-gcloud@v0
         with:
           project_id: ${{ env.GCP_PROJECT }}
@@ -69,13 +62,13 @@ jobs:
             --project ${{ env.GCP_PROJECT }} \
             --platform managed \
             --region ${{ env.REGION }} \
-            --service-account go-boiler-api@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com \
+            --service-account run-invoker@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com \
             --allow-unauthenticated
-          PREVIEW_URL=$(gcloud run services describe ${SERVICE} --format 'value(status.url)')
+          PREVIEW_URL=$(gcloud run services describe ${SERVICE_NAME} -region ${{ env.REGION }} --format 'value(status.url)')
 
       - name: Notify
         run: |
-          PREVIEW_URL=$(gcloud run services describe ${SERVICE} --format 'value(status.url)')
+          PREVIEW_URL=$(gcloud run services describe ${SERVICE_NAME} -region ${{ env.REGION }} --format 'value(status.url)')
           curl -X POST \
             --url ${{ github.event.pull_request._links.statuses.href }} \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
@@ -117,27 +110,38 @@ jobs:
             ${{ runner.os }}-go-
       - name: Test
         run: go test ./...
-#  deploy:
-#    if: github.event_name == 'push'
-#    needs: [docker_push]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#
-#      - uses: google-github-actions/setup-gcloud@v0
-#        with:
-#          project_id: ${{ env.GCP_PROJECT }}
-#
-#      - id: auth
-#        name: Authenticate to Google Cloud
-#        uses: google-github-actions/auth@v0.6.0
-#        with:
-#          create_credentials_file: true
-#          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
-#          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
-#
-#      - id: gcloud
-#        name: Gcloud auth login
-#        run: |-
-#          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+
+  cleanup-preview:
+    name: Cleanup the Preview
+    if: github.event.action == 'closed' || github.event.action == 'unlabeled' || github.event.label.name == 'review'
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0.6.0
+        with:
+          create_credentials_file: true
+          workload_identity_provider: projects/${{ env.GCP_PROJECT_NUM }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+          service_account: github-actions@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
+
+      - id: gcloud
+        name: Configure GCR Docker auth
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+          gcloud --quiet auth configure-docker
+
+      - name: Delete the Cloud Run Service
+        run: gcloud --quiet run services delete ${SERVICE_NAME}
+
+      - name: Delete the Docker image in GCR
+        run: gcloud container images delete gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}
