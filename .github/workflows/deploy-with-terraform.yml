@@ -42,6 +42,7 @@ jobs:
           gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
           gcloud --quiet auth configure-docker
 
+      # TODO: Refine https://github.com/SBiliarski/TADevOpsFinalProject/blob/6f10acdccd4ee9b65e1c2e99fb36a9b84566666c/.github/workflows/ghactions.yml
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 

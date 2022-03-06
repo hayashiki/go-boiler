@@ -4,7 +4,7 @@ on:
     branches:
       - main
   pull_request:
-    types: [synchronize, opened, reopened, closed]
+    types: [synchronize, opened, reopened, closed, labeled, unlabeled]
     branches:
       - main
 env:
@@ -15,7 +15,7 @@ env:
   REGION: asia-northeast1
 jobs:
   build_and_push_and_deploy:
-    if: github.event_name == 'push' #  || github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
+    if: github.event_name == 'push' || github.event.action == 'labeled' #  || github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
     needs: [lint, test]
     runs-on: ubuntu-latest
 
@@ -26,10 +26,10 @@ jobs:
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-      - run: echo "SERVICE_NAME=go-boiler-api" >> $GITHUB_ENV
-        if: github.event_name == 'push'
-#      - run: echo "SERVICE_NAME=preview-${{ github.event.number }}" >> $GITHUB_ENV
-#        if: github.event_name == 'pull_request'
+#      - run: echo "SERVICE_NAME=go-boiler-api" >> $GITHUB_ENV
+#        if: github.event_name == 'push'
+      - run: echo "SERVICE_NAME=preview-${{ github.event.number }}" >> $GITHUB_ENV
+        if: github.event_name == 'pull_request'
       - run: |
           echo "SERVICE_NAME is env=${{ env.SERVICE_NAME }}"
       - uses: google-github-actions/setup-gcloud@v0
@@ -63,54 +63,29 @@ jobs:
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
           docker push gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:latest
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-
-      - name: Set tfvars
-        working-directory: ./terraform
+      - name: Deploy
         run: |-
-          echo "image_tag = \"${{ github.sha }}\"" >> terraform.tfvars
-          echo "name = \"${{ env.SERVICE_NAME }}\"" >> terraform.tfvars
+          gcloud run deploy ${{ env.SERVICE_NAME }} --image gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --project ${{ env.GCP_PROJECT }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --service-account go-boiler-api@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com \
+            --allow-unauthenticated
+          PREVIEW_URL=$(gcloud run services describe ${SERVICE} --format 'value(status.url)')
 
-      - name: Terraform init
-        id: init
-        run: |-
-          terraform init
-        continue-on-error: false
-        working-directory: ./terraform
-        env:
-          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-
-      - name: Terraform Format
-        id: fmt
-        run: terraform fmt -check -recursive
-        working-directory: ./terraform
-        continue-on-error: true
-
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
-        working-directory: ./terraform
-
-# TODO: Refine https://github.com/SBiliarski/TADevOpsFinalProject/blob/6f10acdccd4ee9b65e1c2e99fb36a9b84566666c/.github/workflows/ghactions.yml
-      - name: Terraform Plan
-        id: plan
-        run: |-
-          terraform plan -no-color \
-          -out=PLAN
-        #            \-var="project=${{ env.GCP_PROJECT }}" \
-        #           -var="env=prod" \
-        working-directory: ./terraform
-        env:
-          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-
-      - name: Terraform Apply
-        id: apply
-        run: |-
-          terraform apply PLAN
-        working-directory: ./terraform
-        env:
-          GOOGLE_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+      - name: Notify
+        run: |
+          PREVIEW_URL=$(gcloud run services describe ${SERVICE} --format 'value(status.url)')
+          curl -X POST \
+            --url ${{ github.event.pull_request._links.statuses.href }} \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"state\": \"success\",
+              \"target_url\": \"${PREVIEW_URL}\",
+              \"description\": \"Deploy preview ready!\",
+              \"context\": \"deploy/preview\"
+            }"
   lint:
     name: Lint
     runs-on: ubuntu-latest
