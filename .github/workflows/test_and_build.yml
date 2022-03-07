@@ -141,7 +141,7 @@ jobs:
           gcloud --quiet auth configure-docker
 
       - name: Delete the Cloud Run Service
-        run: gcloud --quiet run services delete ${SERVICE_NAME}
+        run: gcloud --quiet run services delete ${SERVICE_NAME} --region ${{ env.REGION }}
 
       - name: Delete the Docker image in GCR
-        run: gcloud container images delete gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }}
+        run: gcloud container images delete gcr.io/${{ env.GCP_PROJECT }}/${{ env.SERVICE_NAME }} --region ${{ env.REGION }}
